@@ -20,35 +20,11 @@ pipeline {
 
     choice ( 
 
-      name: 'ENVIRONMENT', 
+      name: 'Availability_Zone', 
 
-      choices: ["travel-qa", "travel-prod", "travel-stage"], 
+      choices: ["us-east-1a", "us-east-1b", "us-east-1c"], 
 
-      description: 'ENVIRONMENT' 
-
-    ) 
-
-    string ( 
-
-      name : 'PRIVATE_SUBNET_GROUP_ONE', 
-
-      description: 'DATA PRIVATE SUBNET_GROUP_ID' 
-
-    ) 
-
-    string ( 
-
-      name : 'PRIVATE_SUBNET_GROUP_TWO', 
-
-      description: 'DATA PRIVATE SUBNET_GROUP_ID' 
-
-    ) 
-
-    string ( 
-
-      name : 'PRIVATE_SUBNET_GROUP_THREE', 
-
-      description: 'DATA PRIVATE SUBNET_GROUP_ID' 
+      description: 'Availability Zone' 
 
     ) 
 
@@ -56,9 +32,11 @@ pipeline {
 
       name : 'INSTANCE_TYPE', 
 
-      defaultValue: 'kafka.m5.xlarge', 
+      defaultValue: 't2.micro', 
 
-      description: 'INSTANCE_TYPE' 
+      choice : ["t2.micro", "t3.micro"],
+
+      description: 'INSTANCE TYPE OF EC2' 
 
     ) 
 
@@ -70,62 +48,7 @@ pipeline {
 
     ) 
 
-    string ( 
-
-      name : 'CLUSTER_NAME', 
-
-      defaultValue: 'app-service-kafka', 
-
-      description: 'CLUSTER_NAME' 
-
-    ) 
-
-    string ( 
-
-      name : 'CLUSTER_VERSION', 
-
-      defaultValue: '2.6.1', 
-
-      description: 'CLUSTER_VERSION' 
-
-    ) 
-
-    string ( 
-
-      name : 'PURPOSE', 
-
-      defaultValue: 'business', 
-
-      description: 'PURPOSE' 
-
-    ) 
-
-    string ( 
-
-      name : 'KMS_KEY_ARN', 
-
-      description: 'KMS_KEY_ARN' 
-
-    ) 
-
-    string ( 
-
-      name : 'VOLUME_SIZE', 
-
-      defaultValue: "100", 
-
-      description: 'PRODUCT_OWNER' 
-
-    ) 
-
-    string( 
-
-      name: 'CONFIGURATION_ARN', 
-
-      description: 'Kafka Configuration ARN' 
-
-    ) 
-
+   
     string( 
 
       name: 'AWS_REGION', 
@@ -138,41 +61,11 @@ pipeline {
 
     string( 
 
-      name: 'LOG_GROUP_NAME', 
-
-      description: 'LOG_GROUP_NAME', 
-
-      defaultValue: 'AppServices-kafka-log' 
-
-    ) 
-
-    string( 
-
-      name: 'LOG_RETENTION', 
-
-      description: 'LOG_RETENTION in days Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, and 3653.', 
-
-      defaultValue: '7' 
-
-    ) 
-
-    string( 
-
-      name: 'NO_BROKER_NODES', 
-
-      description: 'NO_BROKER_NODES', 
-
-      defaultValue: '3' 
-
-    ) 
-
-    string( 
-
       name: 'CF_STACK_NAME', 
 
       description: 'Cloudformation Stack Name', 
 
-      defaultValue: 'App-Services-kafka-stack' 
+      defaultValue: 'App-Services-My-EC2' 
 
     ) 
 
@@ -190,19 +83,9 @@ pipeline {
 
           sh '''#!/bin/bash -xe 
 
-  
-
-          CURRENT_DIRECTORY=`pwd` 
-
-          
+          CURRENT_DIRECTORY=`pwd`     
 
           STACK_NAME=$CF_STACK_NAME 
-
-  
-
-          echo $ENVIRONMENT 
-
-           
 
           echo $CURRENT_DIRECTORY 
 
@@ -302,6 +185,69 @@ pipeline {
           */
           sh '''#!/bin/bash -xe 
           CURRENT_DIRECTORY=`pwd`
+
+          STACK_NAME=$CF_STACK_NAME
+
+          ROLE= "arn:aws:iam::697698451036:instance-profile/EC2Access"
+          aws sts assume-role --role-arn $ROLE --role-session-name TemporarySession --output json > assume-role-output.json
+
+          AWS_ACCESS_KEY_ID=$(jq .Credentials.AccessKeyId assume-role-output.json) 
+          echo $AWS_ACCESS_KEY_ID
+  
+
+          AWS_SECRET_ACCESS_KEY=$(jq .Credentials.SecretAccessKey assume-role-output.json) 
+
+  
+
+          AWS_SESSION_TOKEN=$(jq .Credentials.SessionToken assume-role-output.json) 
+
+          export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:1:-1}" 
+          echo $AWS_ACCESS_KEY_ID
+
+          export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:1:-1}" 
+
+          export AWS_SESSION_TOKEN="${AWS_SESSION_TOKEN:1:-1}" 
+
+          cd "$WORKSPACE""/Cloudformation/Jenkins/" 
+
+          ls -al 
+
+          TEMPLATE_PATH=template.json 
+
+          PARAMETERS_PATH=parameters.json
+          cat parameters.json
+
+          envsubst < ${PARAMETERS_PATH} > parameters.json 
+
+  
+
+          cat parameters.json
+
+          if ! aws cloudformation describe-stacks --region $AWS_REGION --stack-name $STACK_NAME ; then 
+
+            aws cloudformation create-stack --stack-name $STACK_NAME  --region $AWS_REGION  --template-body "file://"$TEMPLATE_PATH --parameters "file://parameters.json" --capabilities CAPABILITY_IAM --tags "Key"="Owner","Value"="Aman" "Key"="CreatedBy","Value"="Jenkins" "Key"="Jenkins_Job","Value"="App-Services-EC2-Setup" 
+
+            aws cloudformation wait stack-create-complete --stack-name $STACK_NAME --region $AWS_REGION 
+
+          else 
+
+            aws cloudformation update-stack --stack-name $STACK_NAME  --region $AWS_REGION  --template-body "file://"$TEMPLATE_PATH --parameters "file://parameters.json" --capabilities CAPABILITY_IAM 
+
+            aws cloudformation wait stack-update-complete --stack-name $STACK_NAME --region $AWS_REGION 
+
+          fi 
+
+  
+
+  
+
+          unset AWS_ACCESS_KEY_ID 
+
+          unset AWS_SECRET_ACCESS_KEY 
+
+          unset AWS_SESSION_TOKEN 
+
+
           '''
       } 
 

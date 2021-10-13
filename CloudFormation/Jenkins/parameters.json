@@ -1,0 +1,23 @@
+[ 
+    { 
+      "ParameterKey": "AvailabilityZone", 
+      "ParameterValue": "${Availability_Zone}" 
+    }, 
+    
+    { 
+      "ParameterKey": "InstanceType", 
+      "ParameterValue": "${INSTANCE_TYPE}" 
+    }, 
+    { 
+      "ParameterKey": "SecurityGroup", 
+      "ParameterValue": "${SECURITY_GROUP}" 
+    }, 
+    { 
+      "ParameterKey": "AwsRegion", 
+      "ParameterValue": "${AWS_REGION}" 
+    }, 
+    { 
+      "ParameterKey": "CFStackName", 
+      "ParameterValue": "${CF_STACK_NAME}" 
+    }
+  ] 

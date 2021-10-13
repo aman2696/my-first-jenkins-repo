@@ -1,0 +1,108 @@
+{
+
+	"AWSTemplateFormatVersion": "2010-09-09",
+
+	"Description": "My EC2 Instance",
+
+	"Parameters": {
+
+		"MyKeyName": {
+
+			"Description": "Select the Key Name from the list",
+
+			"Type": "AWS::EC2::KeyPair::KeyName"
+		},
+
+		"AvailabilityZone": {
+
+			"Description": "Select the AZ",
+
+			"Type": "String"
+
+		},
+
+		"InstanceType": {
+
+			"Description": "Select the Instance Type",
+
+			"Type": "String"
+
+		}
+
+	},
+
+	"Resources": {
+
+		"SecurityGroup": {
+
+			"Type": "AWS::EC2::SecurityGroup",
+
+			"Properties": {
+
+				"GroupDescription": {
+
+					"Fn::Sub": "Security group for ${AWS::StackName}"
+
+				},
+
+				"GroupName": {
+
+					"Fn::Sub": "${AWS::StackName}-sg"
+
+				},
+
+				"SecurityGroupIngress": [
+
+					{
+
+						"IpProtocol": "tcp",
+
+						"FromPort": 22,
+
+						"ToPort": 22,
+
+						"CidrIp": "0.0.0.0/0"
+
+					}
+
+				]
+			},
+
+
+			"DevEC2Instance": 
+            {
+
+				"Type": "AWS::EC2::Instance",
+
+				"Properties": 
+                {
+					"ImageId": "ami-0e341fcaad89c3650",
+
+					"InstanceType": 
+                    {
+						"Ref": "InstanceType"
+					},
+
+					"KeyName": 
+                    {
+						"Ref": "MyKeyName"
+					},
+
+					"SecurityGroups": 
+                    {
+						"Ref": "SecurityGroup"
+					},
+					"AvailabilityZone": 
+                    {
+						"Ref": "AvailabilityZone"
+					}
+
+				}
+
+			}
+
+		}
+
+	}
+
+}
