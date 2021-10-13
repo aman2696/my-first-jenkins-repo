@@ -28,7 +28,7 @@ pipeline {
 
     ) 
 
-    string ( 
+    choice ( 
 
       name : 'INSTANCE_TYPE', 
 
