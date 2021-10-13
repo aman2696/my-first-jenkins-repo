@@ -34,7 +34,7 @@ pipeline {
 
       defaultValue: 't2.micro', 
 
-      choice : ["t2.micro", "t3.micro"],
+      choices : ["t2.micro", "t3.micro"],
 
       description: 'INSTANCE TYPE OF EC2' 
 
