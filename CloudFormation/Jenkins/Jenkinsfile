@@ -87,25 +87,7 @@ pipeline {
 
           echo $CURRENT_DIRECTORY 
 
-          case "$ENVIRONMENT" in 
-
-            travel-qa) ROLE="arn:aws:iam::346319152574:role/travel-qa-deployment-role" 
-
-            ;; 
-
-            travel-stage) ROLE="arn:aws:iam::922451091924:role/travel-stage-deployment-role" 
-
-            ;; 
-
-            travel-prod) ROLE="arn:aws:iam::095218890333:role/travel-prod-deployment-role" 
-
-            ;; 
-
-            *) 
-
-            ;; 
-
-          esac 
+         
 
   
 
