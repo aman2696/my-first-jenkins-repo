@@ -186,7 +186,7 @@ pipeline {
 
           STACK_NAME=$CF_STACK_NAME
 
-          ROLE="arn:aws:iam::697698451036:role/EC2Access"
+          ROLE="arn:aws:iam::<Account No>:role/EC2Access"
           aws sts assume-role --role-arn $ROLE --role-session-name TemporarySession --output json > assume-role-output.json
 
           AWS_ACCESS_KEY_ID=$(jq .Credentials.AccessKeyId assume-role-output.json) 
